@@ -19,15 +19,11 @@ _scope = 'globalroot-0'
 # ------------------------------------------------------------------------------------------------------------------	
 
 import requests
-import sys
-import re
 import argparse
 import getpass
 import logging
 import csv
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
-from xml.dom.minidom import parse, parseString
 
 
 try:
@@ -46,7 +42,6 @@ parser.add_argument("-i", help="Input file in csv format", metavar="inputfile", 
 parser.add_argument("-d", help="Enable script debugging", dest="_debug", action="store_true")
 args = parser.parse_args()
 
-# Uncomment the appropriate line to either prompt or hardcode the password
 try: 
 	_password
 except NameError:
