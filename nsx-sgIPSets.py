@@ -1,7 +1,7 @@
 #
 # Script to create NSX-v IP Sets from a csv file and add them as security group members
 # Author: Dale Coghlan (www.sneaku.com)
-# Contributor: Brett Drayton (www.brettdrayton.com)
+# Contributor: Brett Drayton (www.brettdrayton.com) - This script is based on http://brettdrayton.com/nsx-importing-data-checkpoint-ve/
 # Date: 05 Feb 2015
 # https://github.com/dcoghlan/
 
