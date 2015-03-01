@@ -15,7 +15,7 @@ _responsefile = 'debug-sgIPSets.xml'
 _scope = 'globalroot-0'
 
 # Uncomment the following line to hardcode the password. This will remove the password prompt.
-#_password = 'VMware1!'
+_password = 'VMware1!'
 #
 # ------------------------------------------------------------------------------------------------------------------	
 
@@ -64,17 +64,28 @@ def f_debugMode(_debugdata):
 	#print("Status Code = %s" % _success.status_code)
 	print("API response written to %s" % _responsefile)
 
-def get_sgid(tag):
+def f_get_sgid(tag):
+	_get_SG_url = 'https://%s/api/2.0/services/securitygroup/scope/%s' % (_nsxmgr, _scope)
+	_SG_reponse = requests.get((_get_SG_url), data=_myxml, headers=_myheaders, auth=(_user, _password), verify=False)
+	_SG_data = _SG_reponse.content
+	_SG_root = ET.fromstring(_SG_data)
 	for sgid in _SG_root.findall('securitygroup'):
 		if sgid.find('name').text == tag:
 			return sgid.find('objectId').text
 
-def get_ipsid(tag):
+def f_get_ipsid(tag):
+	_get_ipSets_url = 'https://%s/api/2.0/services/ipset/scope/%s' % (_nsxmgr, _scope)
+	_ipSets_reponse = requests.get((_get_ipSets_url), data=_myxml, headers=_myheaders, auth=(_user, _password), verify=False)
+	_ipSets_data = _ipSets_reponse.content
+	_ipSets_root = ET.fromstring(_ipSets_data)
 	for ipsid in _ipSets_root.findall('ipset'):
 		if ipsid.find('name').text == tag:
 			return ipsid.find('objectId').text
 
-			
+def f_add_sg_member(_SG_objectId, _memberoid):
+	_add_sg_member_url = 'https://%s/api/2.0/services/securitygroup/%s/members/%s' % (_nsxmgr, _SG_objectId, _ipSets_objectId)
+	_add_sg_member_reponse = requests.put((_add_sg_member_url), data=_myxml, headers=_myheaders, auth=(_user, _password), verify=False)
+	return _add_sg_member_reponse.status_code, _add_sg_member_reponse.text	
 
 # Set the application content-type header value
 _myheaders = {'Content-Type': 'application/xml'}
@@ -129,26 +140,20 @@ with open('%s' % _inputfile, 'r+') as _csvinput:
 		else:
 			_sg = row[0]
 			_ipSet = row[2]
-			
-			_get_SG_url = 'https://%s/api/2.0/services/securitygroup/scope/%s' % (_nsxmgr, _scope)
-			_SG_reponse = requests.get((_get_SG_url), data=_myxml, headers=_myheaders, auth=(_user, _password), verify=False)
-			_SG_data = _SG_reponse.content
-			_SG_root = ET.fromstring(_SG_data)
-			_SG_objectId = get_sgid(_sg)
+
+			_SG_objectId = f_get_sgid(_sg)
 			if args._debug:
 				print(_sg + ' = ' + _SG_objectId)
 			
-			_get_ipSets_url = 'https://%s/api/2.0/services/ipset/scope/%s' % (_nsxmgr, _scope)
-			_ipSets_reponse = requests.get((_get_ipSets_url), data=_myxml, headers=_myheaders, auth=(_user, _password), verify=False)
-			_ipSets_data = _ipSets_reponse.content
-			_ipSets_root = ET.fromstring(_ipSets_data)
-			_ipSets_objectId = get_ipsid(_ipSet)
+
+			_ipSets_objectId = f_get_ipsid(_ipSet)
 			if args._debug:
 				print(_ipSet + ' = ' + _ipSets_objectId)
 
 			
-			_add_sg_member_url = 'https://%s/api/2.0/services/securitygroup/%s/members/%s' % (_nsxmgr, _SG_objectId, _ipSets_objectId)
-			_add_sg_member_reponse = requests.put((_add_sg_member_url), data=_myxml, headers=_myheaders, auth=(_user, _password), verify=False)
+			test = f_add_sg_member(_SG_objectId, _ipSets_objectId)
+			print(test)
+			
 			if _add_sg_member_reponse.status_code != 200:
 				print('Error adding ' + _ipSet + ' to Security-Group ' + _sg)
 				f_debugMode(_add_sg_member_reponse.text)
